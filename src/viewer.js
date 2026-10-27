@@ -321,6 +321,10 @@ export function setTool(tool) {
   if (state.editingId) document.activeElement?.blur?.();
   state.tool = tool;
   if (tool !== 'place') state.pendingImage = null;
+  if (tool !== 'select' && tool !== 'text' && state.selectedId) {
+    state.selectedId = null;
+    emit('selection');
+  }
   document.body.dataset.tool = tool;
   for (const pv of pageViews.values()) {
     if (tool === 'edittext') renderTextHits(pv);

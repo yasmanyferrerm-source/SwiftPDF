@@ -70,8 +70,13 @@ body.no-doc #optionsbar, body.no-doc #sidebar, body.no-doc #page-indicator { dis
 @media (max-width: 1180px) { .tool span { display: none; } .tool { padding: 0 8px; } }
 @media (max-width: 760px) {
   .icon.labeled span { display: none; }
-  .tb-group.tools { margin: 0 4px; }
   #btn-zoomout, #btn-zoomin { display: none; }
+  #topbar { height: auto; flex-wrap: wrap; padding: 4px 6px; row-gap: 4px; overflow: visible; }
+  #topbar > .tb-group:last-child { margin-left: auto; }
+  .tb-group.tools { order: 3; width: 100%; margin: 0; overflow-x: auto; scrollbar-width: none; justify-content: flex-start; }
+  .tb-group.tools::-webkit-scrollbar { display: none; }
+  .tool { flex: none; height: 38px; }
+  #optionsbar.empty { display: none; }
 }
 
 /* ---------- options bar ---------- */

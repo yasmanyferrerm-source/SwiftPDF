@@ -196,12 +196,14 @@ on('tool', (tool) => {
 
 function syncOptionsBar() {
   const sel = state.selectedId ? getItem(state.selectedId) : null;
-  const ctx = sel?.type === 'text' ? 'text' : state.tool;
+  const ctx = sel?.type === 'text' && (state.tool === 'select' || state.tool === 'text') ? 'text' : state.tool;
   document.querySelectorAll('#optionsbar .opt[data-for]').forEach((o) => {
     o.hidden = !o.dataset.for.split(' ').includes(ctx);
   });
   $('sel-actions').hidden = !sel;
   $('tool-hint').hidden = !!sel;
+  const anyOpt = [...document.querySelectorAll('#optionsbar .opt[data-for]')].some((o) => !o.hidden);
+  $('optionsbar').classList.toggle('empty', !anyOpt && !sel);
   if (sel?.type === 'text') {
     $('opt-font').value = sel.font;
     $('opt-fontsize').value = Math.round(sel.fontSize * 10) / 10;

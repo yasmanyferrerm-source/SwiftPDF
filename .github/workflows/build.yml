@@ -1,0 +1,118 @@
+name: Build SwiftPDF
+
+# Run manually (Actions tab, or the PC Build Tool via `gh workflow run`).
+# Builds the Windows installer + Store MSIX and the Android APK,
+# then publishes them all as a GitHub Release.
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: Release notes (optional)
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Build Windows installer
+        run: npx electron-builder --win nsis --publish never
+      - name: Build Microsoft Store package (MSIX)
+        continue-on-error: true
+        run: npx electron-builder --win appx --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          if-no-files-found: error
+          path: |
+            release/*.exe
+            release/*.appx
+
+  android:
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm run build
+      - name: Create Android project
+        run: |
+          npx cap add android
+          node scripts/patch-android.cjs
+          npx cap sync android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+      - name: Build debug APK (installable)
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - name: Build signed release APK + AAB (only if keystore secrets are set)
+        if: env.KEYSTORE_B64 != ''
+        working-directory: android
+        env:
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          ./gradlew assembleRelease bundleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/release.jks" \
+            -Pandroid.injected.signing.store.password="$KS_PASS" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASS"
+      - name: Collect outputs
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk "out/SwiftPDF-${VERSION}.apk"
+          if [ -f android/app/build/outputs/apk/release/app-release.apk ]; then
+            cp android/app/build/outputs/apk/release/app-release.apk "out/SwiftPDF-${VERSION}-release.apk"
+          fi
+          if [ -f android/app/build/outputs/bundle/release/app-release.aab ]; then
+            cp android/app/build/outputs/bundle/release/app-release.aab "out/SwiftPDF-${VERSION}-release.aab"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: out/*
+
+  release:
+    needs: [windows, android]
+    if: always() && (needs.windows.result == 'success' || needs.android.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist-release
+          merge-multiple: true
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTES: ${{ github.event.inputs.notes }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}-build${{ github.run_number }}"
+          ls -la dist-release
+          BODY="SwiftPDF ${VERSION} (build ${{ github.run_number }})"
+          if [ -n "$NOTES" ]; then BODY="$BODY"$'\n\n'"$NOTES"; fi
+          BODY="$BODY"$'\n\n'"- Windows: SwiftPDF-Setup-*.exe (installer), SwiftPDF-Store-*.appx (Microsoft Store upload)"$'\n'"- Android: SwiftPDF-*.apk (install on phone)"
+          gh release create "$TAG" dist-release/* --title "SwiftPDF ${VERSION} (build ${{ github.run_number }})" --notes "$BODY"

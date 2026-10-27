@@ -1,0 +1,81 @@
+{
+  "name": "swiftpdf",
+  "productName": "SwiftPDF",
+  "version": "1.0.0",
+  "description": "SwiftPDF - read, edit, fill and sign PDFs",
+  "author": "yasmanyfmSoft",
+  "main": "electron/main.cjs",
+  "private": true,
+  "devDependencies": {
+    "electron": "^45.0.0",
+    "electron-builder": "^26.18.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.4.299",
+    "vite": "^8.3.5"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3"
+  },
+  "scripts": {
+    "prebuild": "node scripts/copy-pdfjs-assets.cjs",
+    "build": "vite build",
+    "predev": "node scripts/copy-pdfjs-assets.cjs",
+    "dev": "vite",
+    "start": "npm run build && electron .",
+    "dist:win": "npm run build && electron-builder --win nsis --publish never",
+    "android:prepare": "npm run build && npx cap add android && node scripts/patch-android.cjs && npx cap sync android"
+  },
+  "build": {
+    "appId": "com.yasmanyfmsoft.swiftpdf",
+    "productName": "SwiftPDF",
+    "copyright": "Copyright © 2026 yasmanyfmSoft",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json",
+      "!node_modules/**/*"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "pdf",
+        "name": "PDF Document",
+        "description": "PDF Document",
+        "role": "Editor"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.png",
+      "executableName": "SwiftPDF"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "SwiftPDF",
+      "artifactName": "SwiftPDF-Setup-${version}.${ext}"
+    },
+    "appx": {
+      "identityName": "yasmanyfmSoft.SwiftPDF",
+      "publisher": "CN=89A5A13E-7E4F-44CA-A558-D9E4282A4BD1",
+      "publisherDisplayName": "yasmanyfmSoft",
+      "displayName": "SwiftPDF",
+      "applicationId": "SwiftPDF",
+      "backgroundColor": "#1f2937",
+      "artifactName": "SwiftPDF-Store-${version}.${ext}"
+    }
+  }
+}

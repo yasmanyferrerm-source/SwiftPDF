@@ -1,0 +1,8 @@
+{
+  "appId": "com.yasmanyfmsoft.swiftpdf",
+  "appName": "SwiftPDF",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  }
+}

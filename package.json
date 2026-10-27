@@ -1,7 +1,7 @@
 {
   "name": "swiftpdf",
   "productName": "SwiftPDF",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "SwiftPDF - read, edit, fill and sign PDFs",
   "author": "yasmanyfmSoft",
   "main": "electron/main.cjs",
@@ -69,10 +69,10 @@
       "artifactName": "SwiftPDF-Setup-${version}.${ext}"
     },
     "appx": {
-      "identityName": "yasmanyfmSoft.SwiftPDF",
+      "identityName": "yasmanyfmSoft.Swift-PDF",
       "publisher": "CN=89A5A13E-7E4F-44CA-A558-D9E4282A4BD1",
       "publisherDisplayName": "yasmanyfmSoft",
-      "displayName": "SwiftPDF",
+      "displayName": "Swift-PDF",
       "applicationId": "SwiftPDF",
       "backgroundColor": "#1f2937",
       "artifactName": "SwiftPDF-Store-${version}.${ext}"

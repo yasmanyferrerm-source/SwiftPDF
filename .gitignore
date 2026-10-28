@@ -1,7 +1,7 @@
 node_modules/
 dist/
 release/
-android/
+/android/
 public/pdfjs/
 *.log
 .DS_Store

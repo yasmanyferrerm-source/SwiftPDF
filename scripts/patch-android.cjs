@@ -30,6 +30,13 @@ if (!manifest.includes('application/pdf')) {
   console.log('AndroidManifest: added PDF intent filters');
 }
 
+// App icon (adaptive + legacy + themed) and splash screen
+const resSrc = path.join(root, 'resources', 'android', 'res');
+if (fs.existsSync(resSrc)) {
+  fs.cpSync(resSrc, path.join(root, 'android', 'app', 'src', 'main', 'res'), { recursive: true, force: true });
+  console.log('Android icons and splash screens copied');
+}
+
 const versionCode = parseInt(process.env.VERSION_CODE || '1', 10);
 let gradle = fs.readFileSync(gradlePath, 'utf8');
 gradle = gradle

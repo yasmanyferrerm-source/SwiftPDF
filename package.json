@@ -1,7 +1,7 @@
 {
   "name": "swiftpdf",
   "productName": "SwiftPDF",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "SwiftPDF - read, edit, fill and sign PDFs",
   "author": "yasmanyfmSoft",
   "main": "electron/main.cjs",

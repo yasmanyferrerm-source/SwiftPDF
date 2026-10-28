@@ -15,6 +15,8 @@
       <symbol id="i-open" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H7.5a2 2 0 0 0-1.9 1.4L3 19z"/><path d="M3 19l2.6-7.6A2 2 0 0 1 7.5 10H22l-2.7 7.7a2 2 0 0 1-1.9 1.3H3z"/></symbol>
       <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3M7 21v-7h10v7"/></symbol>
       <symbol id="i-saveas" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></symbol>
+      <symbol id="i-print" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/><path d="M17.5 12h.01"/></symbol>
+      <symbol id="i-newwin" viewBox="0 0 24 24"><rect x="3" y="7" width="14" height="14" rx="2"/><path d="M7 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2"/><path d="M10 11v6M7 14h6"/></symbol>
       <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></symbol>
       <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
       <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></symbol>
@@ -55,8 +57,10 @@
     <div class="tb-group">
       <button class="icon" id="btn-sidebar" title="Pages panel"><svg><use href="#i-menu"/></svg></button>
       <button class="icon labeled" id="btn-open" title="Open PDF (Ctrl+O)"><svg><use href="#i-open"/></svg><span>Open</span></button>
+      <button class="icon" id="btn-newwin" title="New window (Ctrl+N)"><svg><use href="#i-newwin"/></svg></button>
       <button class="icon labeled needs-doc" id="btn-save" title="Save (Ctrl+S)"><svg><use href="#i-save"/></svg><span>Save</span></button>
       <button class="icon needs-doc" id="btn-saveas" title="Save as… (Ctrl+Shift+S)"><svg><use href="#i-saveas"/></svg></button>
+      <button class="icon needs-doc" id="btn-print" title="Print (Ctrl+P)"><svg><use href="#i-print"/></svg></button>
       <button class="icon needs-doc" id="btn-share" title="Share" hidden><svg><use href="#i-share"/></svg></button>
       <span class="sep"></span>
       <button class="icon needs-doc" id="btn-undo" title="Undo (Ctrl+Z)" disabled><svg><use href="#i-undo"/></svg></button>
@@ -154,7 +158,7 @@
         <h1>SwiftPDF</h1>
         <p>Read, edit, fill and sign PDFs.</p>
         <button class="primary" id="btn-open-big"><svg><use href="#i-open"/></svg>Open a PDF</button>
-        <p class="drop-hint">or drop a PDF file here</p>
+        <p class="drop-hint">or drop PDF files here · each one opens in its own window</p>
       </div>
     </section>
     <div id="page-indicator" class="needs-doc"></div>

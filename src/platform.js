@@ -26,12 +26,43 @@ function pickFile(accept) {
   });
 }
 
-/** @returns {Promise<{name, path, data: Uint8Array} | null>} */
+/** @returns {Promise<{name, path, data: Uint8Array} | null>} single file (used for "insert pages") */
 export async function openPdfFile() {
-  if (isDesktop) return desktop.openDialog();
+  if (isDesktop) {
+    const paths = await desktop.openDialog();
+    return paths && paths.length ? desktop.readFile(paths[0]) : null;
+  }
   const f = await pickFile('application/pdf,.pdf');
   if (!f) return null;
   return { name: f.name, path: null, data: new Uint8Array(await f.arrayBuffer()) };
+}
+
+/**
+ * Lets the user pick one or more PDFs.
+ * @returns {Promise<Array<() => Promise<{name, path, data}>>>} loaders, in the order picked
+ */
+export async function pickPdfFiles() {
+  if (isDesktop) {
+    const paths = (await desktop.openDialog()) || [];
+    return paths.map((p) => Object.assign(() => desktop.readFile(p), { path: p }));
+  }
+  const f = await pickFile('application/pdf,.pdf');
+  if (!f) return [];
+  return [async () => ({ name: f.name, path: null, data: new Uint8Array(await f.arrayBuffer()) })];
+}
+
+/** Desktop only: opens a PDF ({path} or {name, data}) in a new window. */
+export const canMultiWindow = isDesktop;
+export function openInNewWindow(file) { return desktop.openInNewWindow(file); }
+export function newWindow() { return desktop.newWindow(); }
+export function setHasDoc(v) { if (isDesktop) desktop.setHasDoc(v); }
+
+export const canPrint = !isAndroid;
+/** Shows the system print dialog for what is currently in the print view. */
+export async function printView(jobName) {
+  if (isDesktop) return desktop.print(jobName);
+  window.print();
+  return { success: true };
 }
 
 export async function fileFromDrop(file) {

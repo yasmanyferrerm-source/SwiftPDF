@@ -20,7 +20,7 @@ Read, edit, fill and sign PDFs — one codebase that ships as a **Windows deskto
 
 **Sign** – draw (mouse, finger or pen), type (script fonts) or upload a signature image (white background removed). Signatures are saved for next time.
 
-**Desktop extras** – registers as a PDF handler ("Open with SwiftPDF"), drag-and-drop to open or merge, Save / Save As, warns about unsaved changes.
+**Desktop extras** – each PDF opens in its own window (Open several at once, Ctrl+N for a new window), print with Ctrl+P (prints all edits and signatures), registers as a PDF handler ("Open with SwiftPDF"), drag-and-drop to open or merge, Save / Save As, warns about unsaved changes.
 **Android extras** – opens PDFs from other apps ("Open with"), saves to `Documents/SwiftPDF`, Share button.
 
 ## Building (Build Tool / GitHub Actions)

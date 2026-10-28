@@ -6,6 +6,7 @@ import { deleteItem } from './overlay.js';
 import { buildPdf } from './export.js';
 import { openSignatureDialog, isSignatureOpen, closeSignature } from './signature.js';
 import * as platform from './platform.js';
+import { printDocument } from './print.js';
 
 const $ = (id) => document.getElementById(id);
 const body = document.body;
@@ -31,6 +32,8 @@ function updateTitle() {
 body.classList.add(`plat-${platform.platformName}`);
 if (platform.canShare) $('btn-share').hidden = false;
 if (platform.isAndroid) $('btn-saveas').hidden = true;
+if (!platform.canPrint) $('btn-print').hidden = true;
+if (!platform.canMultiWindow) $('btn-newwin').hidden = true;
 
 // --------------------------------------------------------- open / save --
 async function openDocument(file) {
@@ -60,16 +63,47 @@ async function openDocument(file) {
     $('viewer').scrollTop = 0;
     emit('zoom', state.zoom);
     updateTitle();
+    platform.setHasDoc(true);
   } catch (err) {
     console.error(err);
+    if (!state.pages.length) platform.setHasDoc(false);
     toast(err?.name === 'PasswordException' ? 'Could not open: password required.' : `Could not open this file: ${err.message || err}`, 5000);
   } finally {
     busy(false);
   }
 }
 
+/** Desktop: a window already showing a PDF opens new files in new windows. */
+const opensInNewWindow = () => platform.canMultiWindow && state.pages.length > 0;
+
 async function doOpen() {
-  try { await openDocument(await platform.openPdfFile()); } catch (err) { toast(`Open failed: ${err.message}`); }
+  try {
+    const loaders = await platform.pickPdfFiles();
+    if (!loaders.length) return;
+    let rest = loaders;
+    if (!opensInNewWindow()) {
+      await openDocument(await loaders[0]());
+      rest = loaders.slice(1);
+    }
+    for (const load of rest) await platform.openInNewWindow({ path: load.path });
+  } catch (err) {
+    toast(`Open failed: ${err.message || err}`);
+  }
+}
+
+async function doPrint() {
+  if (!state.pages.length || !platform.canPrint) return;
+  commitEditing();
+  busy(true, 'Preparing to print…');
+  try {
+    const res = await printDocument(state.fileName || 'SwiftPDF', (t) => { if (t) $('busy-text').textContent = t; else busy(false); }, platform.printView);
+    if (res && !res.success && res.reason && !/cancel/i.test(res.reason)) toast(`Printing failed: ${res.reason}`, 5000);
+  } catch (err) {
+    console.error(err);
+    toast(`Printing failed: ${err.message || err}`, 5000);
+  } finally {
+    busy(false);
+  }
 }
 
 function commitEditing() {
@@ -338,6 +372,8 @@ on('closeSidebar', () => body.classList.remove('sidebar-open'));
 
 // -------------------------------------------------------------- buttons --
 $('btn-open').addEventListener('click', doOpen);
+$('btn-print').addEventListener('click', doPrint);
+$('btn-newwin').addEventListener('click', () => platform.newWindow());
 $('btn-open-big').addEventListener('click', doOpen);
 $('btn-save').addEventListener('click', () => doSave());
 $('btn-saveas').addEventListener('click', () => doSave({ saveAs: true }));
@@ -435,6 +471,8 @@ window.addEventListener('keydown', (e) => {
   const mod = e.ctrlKey || e.metaKey;
   const k = e.key.toLowerCase();
   if (mod && k === 'o') { e.preventDefault(); doOpen(); return; }
+  if (mod && k === 'p') { e.preventDefault(); doPrint(); return; }
+  if (mod && k === 'n' && platform.canMultiWindow) { e.preventDefault(); platform.newWindow(); return; }
   if (mod && k === 's') { e.preventDefault(); doSave({ saveAs: e.shiftKey }); return; }
   if (mod && k === 'f') { e.preventDefault(); openSearch(); return; }
   if (mod && (k === '=' || k === '+')) { e.preventDefault(); stepZoom(1); return; }
@@ -466,14 +504,25 @@ window.addEventListener('drop', async (e) => {
   e.preventDefault();
   dragDepth = 0;
   $('drop-overlay').hidden = true;
-  const f = [...e.dataTransfer.files].find((x) => /\.pdf$/i.test(x.name) || x.type === 'application/pdf');
-  if (!f) { toast('Drop a PDF file.'); return; }
-  const file = await platform.fileFromDrop(f);
-  if (state.pages.length && confirm(`Add the pages of "${f.name}" to this document?\n\nOK = insert pages · Cancel = open it instead`)) {
+  const pdfs = [...e.dataTransfer.files].filter((x) => /\.pdf$/i.test(x.name) || x.type === 'application/pdf');
+  if (!pdfs.length) { toast('Drop a PDF file.'); return; }
+  const files = await Promise.all(pdfs.map((f) => platform.fileFromDrop(f)));
+  const names = pdfs.length === 1 ? `"${pdfs[0].name}"` : `these ${pdfs.length} PDFs`;
+  const elsewhere = platform.canMultiWindow ? 'open in a new window' : 'open it instead';
+  if (state.pages.length && confirm(`Add the pages of ${names} to this document?\n\nOK = insert pages · Cancel = ${elsewhere}`)) {
     busy(true, 'Adding pages…');
-    try { insertPages(await loadPdf(file.data, file.name), state.pages.length); } finally { busy(false); }
-  } else {
-    openDocument(file);
+    try {
+      for (const file of files) insertPages(await loadPdf(file.data, file.name), state.pages.length);
+    } finally { busy(false); }
+    return;
+  }
+  let rest = files;
+  if (!opensInNewWindow()) {
+    await openDocument(files[0]);
+    rest = files.slice(1);
+  }
+  if (platform.canMultiWindow) {
+    for (const file of rest) await platform.openInNewWindow(file.path ? { path: file.path } : file);
   }
 });
 

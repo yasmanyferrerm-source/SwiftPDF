@@ -125,7 +125,9 @@ export function refreshPageOverlay(pageId) {
 
 // ------------------------------------------------------------------ zoom --
 export function fitWidthZoom() {
-  const avail = viewerEl.clientWidth - (window.innerWidth < 700 ? 16 : 48);
+  // leave room for the vertical scrollbar even before the pages have been laid out
+  const scrollbar = viewerEl.scrollHeight > viewerEl.clientHeight ? 0 : 18;
+  const avail = viewerEl.clientWidth - scrollbar - (window.innerWidth < 700 ? 16 : 48);
   let maxW = 0;
   for (const p of state.pages) {
     const w = viewRotation(p) % 180 === 0 ? p.view[2] - p.view[0] : p.view[3] - p.view[1];

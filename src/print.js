@@ -13,14 +13,15 @@ function assetDir(dir) { return new URL(`pdfjs/${dir}/`, document.baseURI).href;
  */
 export async function printDocument(jobName, progress, showDialog) {
   const { bytes } = await buildPdf();
-  const pdf = await pdfjsLib.getDocument({
+  const task = pdfjsLib.getDocument({
     data: bytes,
     cMapUrl: assetDir('cmaps'),
     cMapPacked: true,
     standardFontDataUrl: assetDir('standard_fonts'),
     wasmUrl: assetDir('wasm'),
     iccUrl: assetDir('iccs'),
-  }).promise;
+  });
+  const pdf = await task.promise;
 
   const root = document.createElement('div');
   root.id = 'print-root';
@@ -61,6 +62,7 @@ export async function printDocument(jobName, progress, showDialog) {
     document.body.classList.remove('printing');
     root.remove();
     urls.forEach((u) => URL.revokeObjectURL(u));
-    pdf.destroy();
+    // cleanup must never turn a finished print into an error
+    task.destroy().catch(() => {});
   }
 }

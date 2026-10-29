@@ -41,7 +41,7 @@ async function openDocument(file) {
   if (state.dirty && !confirm('Discard unsaved changes and open another file?')) return;
   busy(true, 'Opening…');
   try {
-    for (const d of state.docs.values()) d.pdf.destroy?.();
+    for (const d of state.docs.values()) d.pdf.loadingTask?.destroy().catch(() => {});
     state.docs.clear();
     const entries = await loadPdf(file.data, file.name);
     state.pages = entries;
